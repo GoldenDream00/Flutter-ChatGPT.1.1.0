@@ -2,6 +2,7 @@
 import 'dart:async';
 
 // 🐦 Flutter imports:
+import 'package:chat_gpt_app/core/logger.dart';
 import 'package:flutter/material.dart';
 
 // 🌎 Project imports:
@@ -14,9 +15,12 @@ void main() {
 
     FlutterError.onError = (FlutterErrorDetails details) {
       FlutterError.dumpErrorToConsole(details);
+      AppLogger.error(() => "[main] unhandle error $details");
     };
 
     await configureDependencies();
     runApp(const MyApp());
-  }, (error, stack) {});
+  }, (error, stack) {
+    AppLogger.error(() => "[runZonedGuarded] unhandle error $error $stack");
+  });
 }
