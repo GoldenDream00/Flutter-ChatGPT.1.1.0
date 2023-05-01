@@ -1,6 +1,7 @@
 import 'package:chat_gpt_app/presentation/screens/home/model/message_model.dart';
 import 'package:chat_gpt_app/presentation/screens/home/states/conversation/conversation_cubit.dart';
 import 'package:chat_gpt_app/presentation/widgets/message_bubble.dart';
+import 'package:chat_gpt_app/states/open_ai_api/selectors/has_valid_api_key_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -25,24 +26,52 @@ class HomeScreenContainerState extends State<HomeScreenContainer> {
         controller: _scrollController,
         reverse: true,
         slivers: [
-          BlocBuilder<ConversationCubit, ConversationState>(
-            builder: (context, state) {
-              List<MessageModel> allMessages = [];
-              if (state is ConversationLoadedState) {
-                allMessages = state.messages.reversed.toList();
-              } else if (state is ConversationLoadingState) {
-                allMessages = state.messages.reversed.toList();
-              } else {
-                return const SliverToBoxAdapter(child: SizedBox());
-              }
-
-              return SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, i) => MessageBubble(
-                    message: allMessages[i],
+          HasValidApiKeySelector(
+            builder: (context, hasValidKey) {
+              if (!hasValidKey) {
+                return SliverFillRemaining(
+                  child: Center(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.key_rounded,
+                            size: 64,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                          const Text(
+                            "You need to set an API key before starting a conversation!",
+                            textAlign: TextAlign.center,
+                          )
+                        ],
+                      ),
+                    ),
                   ),
-                  childCount: allMessages.length,
-                ),
+                );
+              }
+              return BlocBuilder<ConversationCubit, ConversationState>(
+                builder: (context, state) {
+                  List<MessageModel> allMessages = [];
+                  if (state is ConversationLoadedState) {
+                    allMessages = state.messages.reversed.toList();
+                  } else if (state is ConversationLoadingState) {
+                    allMessages = state.messages.reversed.toList();
+                  } else {
+                    return const SliverToBoxAdapter(child: SizedBox());
+                  }
+
+                  return SliverList(
+                    delegate: SliverChildBuilderDelegate(
+                      (context, i) => MessageBubble(
+                        message: allMessages[i],
+                      ),
+                      childCount: allMessages.length,
+                    ),
+                  );
+                },
               );
             },
           ),
@@ -55,33 +84,41 @@ class HomeScreenContainerState extends State<HomeScreenContainer> {
           width: double.infinity,
           alignment: Alignment.bottomCenter,
           color: Colors.transparent,
-          child: TextFormField(
-            controller: _chatBoxTextController,
-            onFieldSubmitted: (value) {
-              _chatBoxTextController.clear();
-              context.read<ConversationCubit>().sendMessage(value);
-            },
-            decoration: InputDecoration(
-              suffixIcon: ValueListenableBuilder(
-                valueListenable: _chatBoxTextController,
-                builder: (context, value, widget) {
-                  return IconButton(
-                    color: value.text.isNotEmpty ? Theme.of(context).colorScheme.primary : null,
-                    onPressed: value.text.isNotEmpty
-                        ? () {
-                            _chatBoxTextController.clear();
-                            context.read<ConversationCubit>().sendMessage(value.text);
-                          }
-                        : null,
-                    icon: const Icon(Icons.send_rounded),
-                  );
+          child: HasValidApiKeySelector(
+            builder: (context, hasValidKey) {
+              return TextFormField(
+                controller: _chatBoxTextController,
+                onFieldSubmitted: (value) {
+                  if (hasValidKey) {
+                    _chatBoxTextController.clear();
+                    context.read<ConversationCubit>().sendMessage(value);
+                  } 
                 },
-              ),
-              hintText: "Send a message",
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(120),
-              ),
-            ),
+                decoration: InputDecoration(
+                  suffixIcon: ValueListenableBuilder(
+                    valueListenable: _chatBoxTextController,
+                    builder: (context, value, widget) {
+                      return IconButton(
+                        color: value.text.isNotEmpty ? Theme.of(context).colorScheme.primary : null,
+                        onPressed: value.text.isNotEmpty
+                            ? () {
+                                if (hasValidKey) {
+                                  _chatBoxTextController.clear();
+                                  context.read<ConversationCubit>().sendMessage(value.text);
+                                }
+                              }
+                            : null,
+                        icon: const Icon(Icons.send_rounded),
+                      );
+                    },
+                  ),
+                  hintText: "Send a message",
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(120),
+                  ),
+                ),
+              );
+            },
           ),
         ),
       ),
