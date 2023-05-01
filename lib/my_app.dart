@@ -1,4 +1,5 @@
 // 🐦 Flutter imports:
+import 'package:chat_gpt_app/states/open_ai_api/open_ai_key_cubit.dart';
 import 'package:flutter/material.dart';
 
 // 📦 Package imports:
@@ -16,8 +17,15 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider<ThemeModeCubit>(
-      create: (context) => ThemeModeCubit(AppInstances.get<ThemeManagerProtocol>().currentTheme),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider<ThemeModeCubit>(
+          create: (context) => ThemeModeCubit(AppInstances.get<ThemeManagerProtocol>().currentTheme),
+        ),
+        BlocProvider<OpenAIKeyCubit>(
+          create: (context) => OpenAIKeyCubit(),
+        )
+      ],
       child: BlocBuilder<ThemeModeCubit, ThemeMode>(
         builder: (context, themeMode) {
           return MaterialApp.router(

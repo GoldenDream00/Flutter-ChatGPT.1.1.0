@@ -40,7 +40,7 @@ final appRouter = GoRouter(
                   clipBehavior: Clip.antiAlias,
                   animationDuration: Duration.zero,
                   elevation: Tween<double>(
-                    begin: 8,
+                    begin: 10,
                     end: 2,
                   ).evaluate(curvedAnimation),
                   shape: ShapeBorderTween(

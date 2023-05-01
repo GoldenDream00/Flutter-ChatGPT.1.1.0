@@ -3,6 +3,7 @@ import 'package:injectable/injectable.dart';
 
 abstract class ChatGPTRepositoryProtocol {
   Future<void> setup(String apiKey);
+  void dispose();
   Future<AiModel> get models;
   Future<ChatCTResponse?> request({required ChatCompleteText text});
 }
@@ -15,7 +16,7 @@ class ChatGPTRepository implements ChatGPTRepositoryProtocol {
   Future<void> setup(String apiKey) async {
     _openAI = OpenAI.instance.build(
       token: apiKey,
-      baseOption: HttpSetup(receiveTimeout: const Duration(seconds: 5)),
+      baseOption: HttpSetup(receiveTimeout: const Duration(seconds: 60)),
       isLog: true,
     );
   }
@@ -28,5 +29,10 @@ class ChatGPTRepository implements ChatGPTRepositoryProtocol {
   @override
   Future<ChatCTResponse?> request({required ChatCompleteText text}) {
     return _openAI.onChatCompletion(request: text);
+  }
+
+  @override
+  void dispose() {
+    _openAI.setToken("");
   }
 }
