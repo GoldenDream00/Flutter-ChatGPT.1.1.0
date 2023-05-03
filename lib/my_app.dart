@@ -33,10 +33,12 @@ class MyApp extends StatelessWidget {
             theme: ThemeData(
               brightness: Brightness.light,
               useMaterial3: true,
+              colorSchemeSeed: Colors.teal,
             ),
             darkTheme: ThemeData(
               brightness: Brightness.dark,
               useMaterial3: true,
+              colorSchemeSeed: Colors.teal,
             ),
             routerConfig: appRouter,
             builder: (context, child) => ResponsiveBreakpoints.builder(
